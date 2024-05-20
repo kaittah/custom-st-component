@@ -87,9 +87,7 @@ def my_component(
     input_prompt = st.text_input("How can I help you?")
     if input_prompt:
         renderables = da.run(prompt=input_prompt)
-        print([r.content for r in renderables])
-        print(renderables)
-        print(len(renderables))
+
         _component_func(
             name=name,
             key=key,

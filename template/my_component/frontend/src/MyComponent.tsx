@@ -4,9 +4,10 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { ReactNode } from "react"
-import { Input } from "baseui/input"
-import { Card, StyledBody } from "baseui/card"
+import { FlexGrid, FlexGridItem } from 'baseui/flex-grid';
+import { Block } from 'baseui/block';
 import Plot from 'react-plotly.js';
+import './styles.css';
 
 interface Renderable {
   type: string
@@ -36,7 +37,7 @@ class MyComponent extends StreamlitComponentBase<State> {
   public componentDidMount(): void {
     Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, this.onRender)
     Streamlit.setComponentReady()
-    Streamlit.setFrameHeight(1000)
+    Streamlit.setFrameHeight(2000)
   }
 
   public componentWillUnmount(): void {
@@ -74,21 +75,11 @@ class MyComponent extends StreamlitComponentBase<State> {
   };
 
   public render = (): ReactNode => {
-    // Arguments that are passed to the plugin in Python are accessible
-    // via `this.props.args`. Here, we access the "name" arg.
-    // const name = this.props.args["name"]
 
-    // Streamlit sends us a theme object via props that we can use to ensure
-    // that our component has visuals that match the active theme in a
-    // streamlit app.
     const { theme } = this.props
     const style: React.CSSProperties = {}
 
-    // Maintain compatibility with older versions of Streamlit that don't send
-    // a theme object.
     if (theme) {
-      // Use the theme object to style our button border. Alternatively, the
-      // theme style is defined in CSS vars.
       const borderStyling = `1px solid ${
         this.state.isFocused ? theme.primaryColor : "gray"
       }`
@@ -96,26 +87,47 @@ class MyComponent extends StreamlitComponentBase<State> {
       style.outline = borderStyling
     }
 
-    // Show a button and some text.
-    // When the button is clicked, we'll increment our "numClicks" state
-    // variable, and send its new value back to Streamlit, where it'll
-    // be available to the Python program.
     return (
       <div>
-      prompt {this.state.prompt} /prompt
-      <div style={{ marginTop: "20px" }}>
-      {this.state.renderables.map((renderable, index) => (
-        
-        <Card key={index}>
-          <StyledBody>
-          {renderable.type === "GRAPH" && (<Plot data={this.parseAndExtractData(renderable.content)} layout={this.parseAndExtractLayout(renderable.content)}/>)
-          }
-          {renderable.type === "TABLE" && renderable.content}
-          {renderable.type === "RESPONSE_BOX" && renderable.content}
-          </StyledBody>
-        </Card>
-
-      ))}
+      <div style={{ marginTop: "20px" }}>        
+        <FlexGrid
+        flexGridColumnCount={2}
+        flexGridColumnGap="scale800"
+        flexGridRowGap="scale800"
+    >
+        {this.state.renderables.map((renderable, index) => (
+            <FlexGridItem key={index}>
+                <Block
+                    padding="scale500"
+                    overrides={{
+                        Block: {
+                            style: {
+                                borderRadius: '8px',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                border: '1px solid gray',
+                                height: '90%',
+                                overflow: 'auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'flex-start',
+                                alignItems: 'flex-start'
+                            },
+                        },
+                    }}
+                >
+                    {renderable.type === "GRAPH" && (
+                        <Plot
+                            data={this.parseAndExtractData(renderable.content)}
+                            layout={this.parseAndExtractLayout(renderable.content)}
+                            style={{ width: '400px', height: '600px' }}
+                        />
+                    )}
+                    {renderable.type === "TABLE" && <p className="p">{renderable.content}</p>}
+                    {renderable.type === "RESPONSE_BOX" && renderable.content}
+                </Block>
+            </FlexGridItem>
+        ))}
+    </FlexGrid>
       
     </div>
     </div>

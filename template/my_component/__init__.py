@@ -45,7 +45,13 @@ else:
 # `declare_component` and call it done. The wrapper allows us to customize
 # our component's API: we can pre-process its input args, post-process its
 # output value, and add a docstring for users.
-def my_component(name, key=None):
+def my_component(
+        name:str,
+        graphing_file_path:str,
+        graphing_import_path:str,
+        database_name:str,
+        general_description:str,
+        key: str=None):
     """Create a new instance of "my_component".
 
     Parameters
@@ -73,10 +79,10 @@ def my_component(name, key=None):
     # "default" is a special argument that specifies the initial return
     # value of the component before the user has interacted with it.
     da = DataAnalystChat(
-        graphing_file_path='graphing.py',
-        graphing_import_path='graphing',
-        database_name='tastybytes_snowflake',
-        general_description='this is a food truck menu'
+        graphing_file_path=graphing_file_path,
+        graphing_import_path=graphing_import_path,
+        database_name=database_name,
+        general_description=general_description
     )
     input_prompt = st.text_input("How can I help you?")
     if input_prompt:

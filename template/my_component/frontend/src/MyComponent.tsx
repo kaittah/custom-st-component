@@ -4,10 +4,20 @@ import {
   withStreamlitConnection,
 } from "streamlit-component-lib"
 import React, { ReactNode } from "react"
+import { Input } from "baseui/input"
+import { Card, StyledBody } from "baseui/card"
+import Plot from 'react-plotly.js';
+
+interface Renderable {
+  type: string
+  content: string
+}
 
 interface State {
-  numClicks: number
   isFocused: boolean
+  value: string
+  renderables: Renderable[]
+  prompt: string
 }
 
 /**
@@ -15,12 +25,58 @@ interface State {
  * automatically when your component should be re-rendered.
  */
 class MyComponent extends StreamlitComponentBase<State> {
-  public state = { numClicks: 0, isFocused: false }
+  public state: { 
+    isFocused: boolean; 
+    value: string; 
+    renderables: Renderable[]
+    prompt: string } 
+    = { isFocused: false, value: "", renderables: [], prompt: "" };
+
+
+  public componentDidMount(): void {
+    Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, this.onRender)
+    Streamlit.setComponentReady()
+    Streamlit.setFrameHeight(1000)
+  }
+
+  public componentWillUnmount(): void {
+    Streamlit.events.removeEventListener(Streamlit.RENDER_EVENT, this.onRender)
+  }
+  
+  private onRender = (event: any): void => {
+    const { renderables, prompt } = event.detail.args
+    if (renderables) {
+      this.setState({ renderables })
+    }
+    if (prompt) {
+      this.setState({ prompt })
+    }
+  }
+
+  private parseAndExtractData = (input: string): any => {
+    try {
+      const json = JSON.parse(input);
+      return json.data;
+    } catch (error) {
+      console.error("Invalid JSON string:", error);
+      return null;
+    }
+  };
+
+  private parseAndExtractLayout = (input: string): any => {
+    try {
+      const json = JSON.parse(input);
+      return json.layout;
+    } catch (error) {
+      console.error("Invalid JSON string:", error);
+      return null;
+    }
+  };
 
   public render = (): ReactNode => {
     // Arguments that are passed to the plugin in Python are accessible
     // via `this.props.args`. Here, we access the "name" arg.
-    const name = this.props.args["name"]
+    // const name = this.props.args["name"]
 
     // Streamlit sends us a theme object via props that we can use to ensure
     // that our component has visuals that match the active theme in a
@@ -45,41 +101,30 @@ class MyComponent extends StreamlitComponentBase<State> {
     // variable, and send its new value back to Streamlit, where it'll
     // be available to the Python program.
     return (
-      <span>
-        Hello, {name}! &nbsp;
-        <button
-          style={style}
-          onClick={this.onClicked}
-          disabled={this.props.disabled}
-          onFocus={this._onFocus}
-          onBlur={this._onBlur}
-        >
-          Click Me!
-        </button>
-      </span>
+      <div>
+      prompt {this.state.prompt} /prompt
+      <div style={{ marginTop: "20px" }}>
+      {this.state.renderables.map((renderable, index) => (
+        
+        <Card key={index}>
+          <StyledBody>
+          {renderable.type === "GRAPH" && (<Plot data={this.parseAndExtractData(renderable.content)} layout={this.parseAndExtractLayout(renderable.content)}/>)
+          }
+          {renderable.type === "TABLE" && renderable.content}
+          {renderable.type === "RESPONSE_BOX" && renderable.content}
+          </StyledBody>
+        </Card>
+
+      ))}
+      
+    </div>
+    </div>
     )
-  }
-
-  /** Click handler for our "Click Me!" button. */
-  private onClicked = (): void => {
-    // Increment state.numClicks, and pass the new value back to
-    // Streamlit via `Streamlit.setComponentValue`.
-    this.setState(
-      prevState => ({ numClicks: prevState.numClicks + 1 }),
-      () => Streamlit.setComponentValue(this.state.numClicks)
-    )
-  }
-
-  /** Focus handler for our "Click Me!" button. */
-  private _onFocus = (): void => {
-    this.setState({ isFocused: true })
-  }
-
-  /** Blur handler for our "Click Me!" button. */
-  private _onBlur = (): void => {
-    this.setState({ isFocused: false })
   }
 }
+
+
+
 
 // "withStreamlitConnection" is a wrapper function. It bootstraps the
 // connection between your component and the Streamlit app, and handles

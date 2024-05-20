@@ -1,5 +1,8 @@
 import os
 import streamlit.components.v1 as components
+import streamlit as st
+
+from my_component.backend.interface.main import DataAnalystChat
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
 # the component, and True when we're ready to package and distribute it.
@@ -37,7 +40,6 @@ else:
     build_dir = os.path.join(parent_dir, "frontend/build")
     _component_func = components.declare_component("my_component", path=build_dir)
 
-
 # Create a wrapper function for the component. This is an optional
 # best practice - we could simply expose the component function returned by
 # `declare_component` and call it done. The wrapper allows us to customize
@@ -70,8 +72,22 @@ def my_component(name, key=None):
     #
     # "default" is a special argument that specifies the initial return
     # value of the component before the user has interacted with it.
-    component_value = _component_func(name=name, key=key, default=0)
+    da = DataAnalystChat(
+        graphing_file_path='graphing.py',
+        graphing_import_path='graphing',
+        database_name='tastybytes_snowflake',
+        general_description='this is a food truck menu'
+    )
+    input_prompt = st.text_input("How can I help you?")
+    if input_prompt:
+        renderables = da.run(prompt=input_prompt)
+        print([r.content for r in renderables])
+        print(renderables)
+        print(len(renderables))
+        _component_func(
+            name=name,
+            key=key,
+            renderables=[r.to_dict() for r in renderables],
+            prompt=input_prompt
+        )
 
-    # We could modify the value returned from the component if we wanted.
-    # There's no need to do this in our simple example - but it's an option.
-    return component_value

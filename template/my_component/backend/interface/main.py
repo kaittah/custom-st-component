@@ -1,10 +1,10 @@
 import importlib
 import streamlit as st
 
-from streamlit_ai_assist.backend.agents.data_analyst_agent import DataAnalystAgent
-from streamlit_ai_assist.backend.agents.conversational_agent import ConversationalAgent
-from streamlit_ai_assist.backend.agents.llm import ChatLLM
-from streamlit_ai_assist.backend.tools import (
+from my_component.backend.agents.data_analyst_agent import DataAnalystAgent
+from my_component.backend.agents.conversational_agent import ConversationalAgent
+from my_component.backend.agents.llm import ChatLLM
+from my_component.backend.tools import (
     ShowTablesTool,
     SchemaTool,
     ShowUniqueTool,
@@ -12,14 +12,15 @@ from streamlit_ai_assist.backend.tools import (
     GraphTool,
     NewGraphTool
 )
-from streamlit_ai_assist.backend.documents import python_to_docs
-from streamlit_ai_assist.backend.data.database_connection import DatabaseConnection
-from streamlit_ai_assist.backend.interface.renderable import Renderable
+from my_component.backend.documents import python_to_docs
+from my_component.backend.data.database_connection import DatabaseConnection
+from my_component.backend.interface.renderable import Renderable, RenderType
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
+
 
 
 @st.cache_resource
@@ -65,8 +66,8 @@ class DataAnalystChat:
         self.general_description: str = general_description
 
     def run(self, prompt):
-
-        conversational_agent.clear_data()
+        if not prompt or prompt == "None" or prompt is None:
+            return []
 
         to_render = []
 
@@ -76,6 +77,7 @@ class DataAnalystChat:
             self.general_description,
             docs
         )
+        conversational_agent.clear_data()
         db = get_database(self.database_name)
 
         next_message, results_list = conversational_agent.run(prompt)
@@ -87,16 +89,16 @@ class DataAnalystChat:
                 imported_graphing_library = importlib.import_module(self.graphing_import_path)
                 func = eval(f'imported_graphing_library.{row["eval"]}')
                 fig = func(conn)
-                to_render.append(Renderable(type="GRAPH", content=pio.to_html(fig, full_html=False)))
+                to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig)))
 
             elif row["eval"] and row["exec"] and row["tool"] == "new_graph_tool":
                 conn = db.connect()
                 exec(row["exec"])
                 fig = eval(row["eval"])
-                to_render.append(Renderable(type="GRAPH", content=pio.to_html(fig, full_html=False)))
+                to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig)))
 
             elif row["print"]:
-                to_render.append(Renderable(type="TABLE", conent=row["print"]))
+                to_render.append(Renderable(type=RenderType.TABLE, content=row["print"]))
 
-        to_render.append(Renderable(type="RESPONSE_BOX", conent=next_message))
+        to_render.append(Renderable(type=RenderType.RESPONSE_BOX, content=next_message))
         return to_render

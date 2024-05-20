@@ -2,7 +2,7 @@ import re
 
 import pandas as pd
 
-from streamlit_ai_assist.backend.tools.base import ToolInterface
+from my_component.backend.tools.base import ToolInterface
 
 
 def dataframe_to_text_table(df: pd.DataFrame) -> str:
@@ -38,7 +38,14 @@ class ShowUniqueTool(ToolInterface):
 """
 
     def use(self, input_text: str, db):
-        match = re.findall(r'\((\w+),\s*(\w+)\)', input_text)[0]
+        match = re.findall(r'\((\w+),\s*(\w+)\)', input_text)
+        if match:
+            match = match[0]
+        else:
+            return dict(
+                observation="Sorry your input is in an incorrect format. Please try again with format (<table name>, <column name>) ",
+                tool=self.name,
+            )
         table_name = match[0]
         column_name = match[1]
         query = f"SELECT DISTINCT {column_name} FROM {table_name} LIMIT 50"

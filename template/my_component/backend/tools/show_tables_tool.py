@@ -1,4 +1,4 @@
-from streamlit_ai_assist.backend.tools.base import ToolInterface
+from my_component.backend.tools.base import ToolInterface
 
 
 def get_tables(db):

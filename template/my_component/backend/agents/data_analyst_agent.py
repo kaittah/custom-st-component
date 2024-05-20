@@ -4,10 +4,10 @@ from typing import List, Dict, Tuple
 
 from pydantic import BaseModel
 
-from streamlit_ai_assist.backend.agents.llm import ChatLLM
-from streamlit_ai_assist.backend.agents import prompts
-from streamlit_ai_assist.backend.tools.base import ToolInterface
-from streamlit_ai_assist.backend.data.database_connection import DatabaseConnection
+from my_component.backend.agents.llm import ChatLLM
+from my_component.backend.agents import prompts
+from my_component.backend.tools.base import ToolInterface
+from my_component.backend.data.database_connection import DatabaseConnection
 
 import logging
 

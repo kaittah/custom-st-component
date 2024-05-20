@@ -3,9 +3,9 @@ from typing import List, Tuple
 
 from pydantic import BaseModel
 
-from streamlit_ai_assist.backend.agents.llm import ChatLLM
-from streamlit_ai_assist.backend.agents import prompts
-from streamlit_ai_assist.backend.agents.data_analyst_agent import DataAnalystAgent
+from my_component.backend.agents.llm import ChatLLM
+from my_component.backend.agents import prompts
+from my_component.backend.agents.data_analyst_agent import DataAnalystAgent
 
 
 PROMPT_TEMPLATE = prompts.CONVERSATIONAL_PROMPT

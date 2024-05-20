@@ -11,3 +11,9 @@ class RenderType(enum.Enum):
 class Renderable:
     type: RenderType
     content: str
+    
+    def to_dict(self):
+            return {
+                "type": self.type.value,
+                "content": self.content
+            }

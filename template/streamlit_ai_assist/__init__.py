@@ -5,11 +5,11 @@ import streamlit.components.v1 as components
 import streamlit as st
 import plotly.io as pio
 
-from my_component.backend.interface.main import DataAnalystChat, get_database
-from my_component.backend.interface.renderable import Renderable, RenderType
-from my_component.backend.github import repo_actions
-from my_component.backend.retrieval import retrieve_top_k
-from my_component.backend import documents
+from streamlit_ai_assist.backend.interface.main import DataAnalystChat, get_database
+from streamlit_ai_assist.backend.interface.renderable import Renderable, RenderType
+from streamlit_ai_assist.backend.github import repo_actions
+from streamlit_ai_assist.backend.retrieval import retrieve_top_k
+from streamlit_ai_assist.backend import documents
 
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
@@ -31,10 +31,10 @@ _RELEASE = False
 
 if not _RELEASE:
     _component_func = components.declare_component(
-        # We give the component a simple, descriptive name ("my_component"
+        # We give the component a simple, descriptive name ("streamlit_ai_assist"
         # does not fit this bill, so please choose something better for your
         # own component :)
-        "my_component",
+        "streamlit_ai_assist",
         # Pass `url` here to tell Streamlit that the component will be served
         # by the local dev server that you run via `npm run start`.
         # (This is useful while your component is in development.)
@@ -46,7 +46,7 @@ else:
     # build directory:
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     build_dir = os.path.join(parent_dir, "frontend/build")
-    _component_func = components.declare_component("my_component", path=build_dir)
+    _component_func = components.declare_component("streamlit_ai_assist", path=build_dir)
 
 # Create a wrapper function for the component. This is an optional
 # best practice - we could simply expose the component function returned by
@@ -58,39 +58,44 @@ def _reset_chat():
     st.cache_data.clear()
     st.cache_resource.clear()
 
-def my_component(
-        name:str,
+def streamlit_ai_assist(
         graphing_file_path:str,
         graphing_import_path:str,
         database_name:str,
         general_description:str,
         key: str=None):
-    """Create a new instance of "my_component".
+    """Create a new instance of "streamlit_ai_assist".
 
     Parameters
     ----------
-    name: str
-        The name of the thing we're saying hello to. The component will display
-        the text "Hello, {name}!"
-    key: str or None
+    graphing_file_path: str
+        The path to a file in your streamlit app repo that contains graphing functions.
+        These functions must take in a single argument named `conn`, which is a database connection.
+        These functions must return a Plotly Figure.
+        These functions will be used as references when the Assistant is rendering graphs and writing 
+        code.
+    graphing_import_path: str
+        The import path to the same graphing file. For example, if your graphing file `graphing.py` is in
+        the root of your app directory, this would just be `graphing`. If you have a file path `utils/graphs.py`
+        this would be `utils.graph`. This module needs to be importable so that functions can be called and
+        rendered by the assistant.
+    database_name: str
+        The name of the database connection that will be connected to using st.connection().
+        The name must be used in secrets.toml to get the credentials.
+        i.e. your `.streamlit/secrets.toml` should contain a section named `[connections.<database_name>]`
+    general_description: str
+        A general description of the use case for the dashboard. This is used to instruct the Assistant to not
+        go off topic.
+    key: str
         An optional key that uniquely identifies this component. If this is
         None, and the component's arguments are changed, the component will
         be re-mounted in the Streamlit frontend and lose its current state.
 
     Returns
     -------
-    int
-        The number of times the component's "Click Me" button has been clicked.
-        (This is the value passed to `Streamlit.setComponentValue` on the
-        frontend.)
+    None
 
     """
-    # Call through to our private component function. Arguments we pass here
-    # will be sent to the frontend, where they'll be available in an "args"
-    # dictionary.
-    #
-    # "default" is a special argument that specifies the initial return
-    # value of the component before the user has interacted with it.
     da = DataAnalystChat(
         graphing_file_path=graphing_file_path,
         graphing_import_path=graphing_import_path,
@@ -103,15 +108,13 @@ def my_component(
     with col2:
         reset_chat = st.button("Reset Chat", on_click=_reset_chat)
     renderables = []
-    # if input_prompt:
-        # renderables = da.run(prompt=input_prompt)
-        # _component_func(
-        #     name=name,
-        #     key=key,
-        #     renderables=[r.to_dict() for r in renderables],
-        #     prompt=input_prompt
-        # )
-    renderables = [Renderable(type=RenderType.NEW_GRAPH, content="", code="testing", function_name="test")]
+    if input_prompt:
+        renderables = da.run(prompt=input_prompt)
+        _component_func(
+            key=key,
+            renderables=[r.to_dict() for r in renderables],
+            prompt=input_prompt
+        )
     new_graphs = [r for r in renderables if r.type.value == "NEW_GRAPH"]
     repo_name = os.environ.get('REPO_NAME')
     repo_owner = os.environ.get('REPO_OWNER')
@@ -164,7 +167,6 @@ def my_component(
             fig.update_layout(width=300, height=300)
             to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig)))
     _component_func(
-        name=name,
         key=None,
         renderables=[r.to_dict() for r in to_render],
         prompt=input_prompt

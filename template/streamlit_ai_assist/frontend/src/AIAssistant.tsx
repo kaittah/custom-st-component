@@ -25,7 +25,7 @@ interface State {
  * This is a React-based component template. The `render()` function is called
  * automatically when your component should be re-rendered.
  */
-class MyComponent extends StreamlitComponentBase<State> {
+class AIAssistant extends StreamlitComponentBase<State> {
   public state: { 
     isFocused: boolean; 
     value: string; 
@@ -161,4 +161,4 @@ class MyComponent extends StreamlitComponentBase<State> {
 // passing arguments from Python -> Component.
 //
 // You don't need to edit withStreamlitConnection (but you're welcome to!).
-export default withStreamlitConnection(MyComponent)
+export default withStreamlitConnection(AIAssistant)

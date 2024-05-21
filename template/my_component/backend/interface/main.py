@@ -71,13 +71,14 @@ class DataAnalystChat:
 
         to_render = []
 
-        docs = python_to_docs.python_to_docs(self.graphing_file_path)
+        docs = python_to_docs(self.graphing_file_path)
         data_analyst, conversational_agent = load_agents(
             self.database_name,
             self.general_description,
             docs
         )
         conversational_agent.clear_data()
+        data_analyst.clear_data()
         db = get_database(self.database_name)
 
         next_message, results_list = conversational_agent.run(prompt)
@@ -95,7 +96,8 @@ class DataAnalystChat:
                 conn = db.connect()
                 exec(row["exec"])
                 fig = eval(row["eval"])
-                to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig)))
+                to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig),
+                                            code=row["exec"], function_name=row["eval"]))
 
             elif row["print"]:
                 to_render.append(Renderable(type=RenderType.TABLE, content=row["print"]))

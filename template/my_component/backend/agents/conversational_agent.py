@@ -87,10 +87,8 @@ class ConversationalAgent(BaseModel):
             prompt = self.get_prompt_template(add_thought_token=add_thought_token)
             generated, tool, tool_input = self.decide_next_action(prompt=prompt)
             self.add_to_conversation_history("assistant", generated)
-            print('TOOL', tool)
             if tool is None:  # final answer reached
                 self.add_to_conversation_history("assistant", tool_input)
-                print("exiting run")
                 return tool_input, self.data_analysis_results
             elif tool == "ask for analysis":
                 data_analysis_results = list(self.data_analyst.run(tool_input))

@@ -153,3 +153,6 @@ class DataAnalystAgent(BaseModel):
         tool = match.group(1).strip()
         tool_input = match.group(2)
         return tool, tool_input.strip(" ").strip('"')
+
+    def clear_data(self):
+        self.conversation_history = []

@@ -14,20 +14,15 @@ def dataframe_to_text_table(df: pd.DataFrame) -> str:
 
 
 def query_to_dataframe(query, db):
-    if 'group by' not in query.lower():
-        return "ERROR", None, (
-            "Error: The SQL query does not include a group by clause."
-            " Too many rows would be returned."
-        )
     try:
         df = db.query(query)
         n_rows = df.shape[0]
         n_cols = df.shape[1]
-        if n_rows < 20 and n_cols < 4:
+        if n_rows < 100 and n_cols < 5:
             return "OK", df, dataframe_to_text_table(df)
         else:
             return "ERROR", None,  f"""The resulting table is too large.
- The dimensions are {n_rows} rows by {n_cols} cols. There can be at most 20 rows and 4 columns.
+ The dimensions are {n_rows} rows by {n_cols} cols. There can be at most 100 rows and 5 columns.
  This tool can only be used to summarize data. Choose another action.
 """
     except Exception as e:

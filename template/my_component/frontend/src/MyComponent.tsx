@@ -34,10 +34,29 @@ class MyComponent extends StreamlitComponentBase<State> {
     = { isFocused: false, value: "", renderables: [], prompt: "" };
 
 
+  getBorderColor(type: string) {
+    switch (type) {
+      case 'GRAPH':
+        return 'black';
+      case 'TABLE':
+        return 'black';
+      case 'RESPONSE_BOX':
+        return 'green';
+        case 'NEW_GRAPH':
+          return 'gold';
+      default:
+        return 'black';
+    }
+  }
+  
   public componentDidMount(): void {
     Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, this.onRender)
     Streamlit.setComponentReady()
-    Streamlit.setFrameHeight(2000)
+    const container = document.getElementById('container-id') // Replace with your container ID
+    if (container) {
+      const height = container.offsetHeight
+      Streamlit.setFrameHeight(height)
+    }
   }
 
   public componentWillUnmount(): void {
@@ -88,38 +107,39 @@ class MyComponent extends StreamlitComponentBase<State> {
     }
 
     return (
-      <div>
-      <div style={{ marginTop: "20px" }}>        
+      <div id="container-id">
         <FlexGrid
         flexGridColumnCount={2}
-        flexGridColumnGap="scale800"
-        flexGridRowGap="scale800"
+        flexGridColumnGap="scale100"
+        flexGridRowGap="scale100"
     >
         {this.state.renderables.map((renderable, index) => (
             <FlexGridItem key={index}>
                 <Block
-                    padding="scale500"
+                    padding="scale200"
                     overrides={{
                         Block: {
                             style: {
                                 borderRadius: '8px',
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                border: '1px solid gray',
-                                height: '90%',
+                                border: `2px solid ${this.getBorderColor(renderable.type)}`,
+                                height: '300px',
+                                width: '90%',
+                                margin: '0px',
                                 overflow: 'auto',
                                 display: 'flex',
-                                flexDirection: 'column',
+                                flexDirection: 'row',
                                 justifyContent: 'flex-start',
                                 alignItems: 'flex-start'
                             },
                         },
                     }}
                 >
-                    {renderable.type === "GRAPH" && (
+                    {(renderable.type === "GRAPH" || renderable.type === "NEW_GRAPH") && (
                         <Plot
                             data={this.parseAndExtractData(renderable.content)}
                             layout={this.parseAndExtractLayout(renderable.content)}
-                            style={{ width: '400px', height: '600px' }}
+                            style={{ width: '100%', height: '400px' }}
                         />
                     )}
                     {renderable.type === "TABLE" && <p className="p">{renderable.content}</p>}
@@ -128,8 +148,6 @@ class MyComponent extends StreamlitComponentBase<State> {
             </FlexGridItem>
         ))}
     </FlexGrid>
-      
-    </div>
     </div>
     )
   }

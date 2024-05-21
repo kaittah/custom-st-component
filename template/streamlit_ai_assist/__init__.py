@@ -10,6 +10,7 @@ from streamlit_ai_assist.backend.interface.renderable import Renderable, RenderT
 from streamlit_ai_assist.backend.github import repo_actions
 from streamlit_ai_assist.backend.retrieval import retrieve_top_k
 from streamlit_ai_assist.backend import documents
+from streamlit_mic_recorder import speech_to_text
 
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
@@ -57,12 +58,22 @@ else:
 def _reset_chat():
     st.cache_data.clear()
     st.cache_resource.clear()
+    if "input_box" in st.session_state:
+        st.session_state.input_box = ""
+    st.session_state.input_prompt = ""
+    if "speech_text" in st.session_state:
+        st.session_state.speech_text = ""
+
+def _submit():
+    st.session_state.input_prompt = st.session_state.input_box
+    st.session_state.input_box = ""
 
 def streamlit_ai_assist(
         graphing_file_path:str,
         graphing_import_path:str,
         database_name:str,
         general_description:str,
+        enable_speech_to_text:bool=True,
         key: str=None):
     """Create a new instance of "streamlit_ai_assist".
 
@@ -86,6 +97,8 @@ def streamlit_ai_assist(
     general_description: str
         A general description of the use case for the dashboard. This is used to instruct the Assistant to not
         go off topic.
+    enable_speech_to_text: bool
+        Whether to allow using speech to text as input.
     key: str
         An optional key that uniquely identifies this component. If this is
         None, and the component's arguments are changed, the component will
@@ -102,20 +115,43 @@ def streamlit_ai_assist(
         database_name=database_name,
         general_description=general_description
     )
-    col1, col2 = st.columns([0.8, 0.2])
+    col1, col2, col3 = st.columns([0.2, 0.8, 0.2])
+    
+    with col2:
+        st.text_input("How can I help you?", label_visibility="collapsed", placeholder="Ask something", on_change=_submit, key="input_box")
+    
     if "input_prompt" not in st.session_state:
         st.session_state.input_prompt = ""
+    if "speech_text" not in st.session_state:
+        st.session_state.speech_text = ""
 
-    def submit():
-        st.session_state.input_prompt = st.session_state.input_box
-        st.session_state.input_box = ""
-    
-    with col1:
-        st.text_input("How can I help you?", label_visibility="collapsed", placeholder="Ask something", on_change=submit, key="input_box")
-    with col2:
-        reset_chat = st.button("Reset Chat", on_click=_reset_chat)
+    if enable_speech_to_text:
+        with col1:
+            speech_text = speech_to_text(
+                language='en',
+                start_prompt="🎙️",
+                stop_prompt="⏹️",
+                just_once=True,
+                use_container_width=False,
+                callback=None,
+                args=(),
+                kwargs={},
+                key=None
+            )
+        st.session_state.speech_text = speech_text
+
+
+    with col3:
+        st.button("Reset Chat", on_click=_reset_chat)
+
+    if st.session_state.speech_text:
+        input_prompt = st.session_state.speech_text
+        st.session_state.speech_text = ""
+    else:
+        input_prompt = st.session_state.input_prompt
+
     renderables = []
-    input_prompt = st.session_state.input_prompt
+    
     if input_prompt:
         renderables = da.run(prompt=input_prompt)
         _component_func(

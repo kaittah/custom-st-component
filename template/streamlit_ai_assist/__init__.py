@@ -102,12 +102,20 @@ def streamlit_ai_assist(
         database_name=database_name,
         general_description=general_description
     )
-    col1, col2 = st.columns([0.8,0.2])
+    col1, col2 = st.columns([0.8, 0.2])
+    if "input_prompt" not in st.session_state:
+        st.session_state.input_prompt = ""
+
+    def submit():
+        st.session_state.input_prompt = st.session_state.input_box
+        st.session_state.input_box = ""
+    
     with col1:
-        input_prompt = st.text_input("How can I help you?", label_visibility="collapsed", placeholder="Ask something")
+        st.text_input("How can I help you?", label_visibility="collapsed", placeholder="Ask something", on_change=submit, key="input_box")
     with col2:
         reset_chat = st.button("Reset Chat", on_click=_reset_chat)
     renderables = []
+    input_prompt = st.session_state.input_prompt
     if input_prompt:
         renderables = da.run(prompt=input_prompt)
         _component_func(
@@ -150,7 +158,6 @@ def streamlit_ai_assist(
 
     docs = documents.python_to_docs(graphing_file_path)
     n_graphs_to_display = 6
-    input_prompt = None
     if input_prompt:
         top_k_docs = retrieve_top_k(query=input_prompt, docs=docs, k=n_graphs_to_display)
     else:

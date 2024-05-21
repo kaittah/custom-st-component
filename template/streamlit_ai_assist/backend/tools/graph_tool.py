@@ -1,5 +1,5 @@
-from my_component.backend.tools.base import ToolInterface
-from my_component.backend.data.database_connection import DatabaseConnection
+from streamlit_ai_assist.backend.tools.base import ToolInterface
+from streamlit_ai_assist.backend.data.database_connection import DatabaseConnection
 
 
 class GraphTool(ToolInterface):

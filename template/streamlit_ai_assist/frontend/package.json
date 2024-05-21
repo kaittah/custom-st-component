@@ -1,5 +1,5 @@
 {
-  "name": "my_component",
+  "name": "streamlit_ai_assist",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

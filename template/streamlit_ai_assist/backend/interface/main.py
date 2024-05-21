@@ -1,10 +1,10 @@
 import importlib
 import streamlit as st
 
-from my_component.backend.agents.data_analyst_agent import DataAnalystAgent
-from my_component.backend.agents.conversational_agent import ConversationalAgent
-from my_component.backend.agents.llm import ChatLLM
-from my_component.backend.tools import (
+from streamlit_ai_assist.backend.agents.data_analyst_agent import DataAnalystAgent
+from streamlit_ai_assist.backend.agents.conversational_agent import ConversationalAgent
+from streamlit_ai_assist.backend.agents.llm import ChatLLM
+from streamlit_ai_assist.backend.tools import (
     ShowTablesTool,
     SchemaTool,
     ShowUniqueTool,
@@ -12,9 +12,9 @@ from my_component.backend.tools import (
     GraphTool,
     NewGraphTool
 )
-from my_component.backend.documents import python_to_docs
-from my_component.backend.data.database_connection import DatabaseConnection
-from my_component.backend.interface.renderable import Renderable, RenderType
+from streamlit_ai_assist.backend.documents import python_to_docs
+from streamlit_ai_assist.backend.data.database_connection import DatabaseConnection
+from streamlit_ai_assist.backend.interface.renderable import Renderable, RenderType
 
 import pandas as pd
 import plotly.express as px

@@ -1,7 +1,7 @@
-from my_component.backend.tools.base import ToolInterface
-from my_component.backend.data.database_connection import DatabaseConnection
-from my_component.backend.agents.function_rewrite_agent import FunctionRewriteAgent
-from my_component.backend.agents.llm import ChatLLM
+from streamlit_ai_assist.backend.tools.base import ToolInterface
+from streamlit_ai_assist.backend.data.database_connection import DatabaseConnection
+from streamlit_ai_assist.backend.agents.function_rewrite_agent import FunctionRewriteAgent
+from streamlit_ai_assist.backend.agents.llm import ChatLLM
 
 import re
 

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from my_component.backend.tools.base import ToolInterface
+from streamlit_ai_assist.backend.tools.base import ToolInterface
 
 
 def dataframe_to_text_table(df: pd.DataFrame) -> str:

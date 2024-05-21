@@ -2,8 +2,8 @@ import re
 
 from pydantic import BaseModel
 
-from my_component.backend.agents.llm import ChatLLM
-from my_component.backend.agents import prompts
+from streamlit_ai_assist.backend.agents.llm import ChatLLM
+from streamlit_ai_assist.backend.agents import prompts
 
 
 PROMPT_TEMPLATE = prompts.FUNCTION_REWRITE_PROMPT

@@ -1,6 +1,6 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import MyComponent from "./MyComponent"
+import AIAssistant from "./AIAssistant"
 
 import { ThemeProvider, createTheme, lightThemePrimitives } from "baseui";
 import { Provider as StyletronProvider } from "styletron-react";
@@ -18,7 +18,7 @@ ReactDOM.render(
   <React.StrictMode>
   <StyletronProvider value={engine}>
     <ThemeProvider theme={theme}>
-    <MyComponent />
+    <AIAssistant />
   </ThemeProvider>
   </StyletronProvider>
   </React.StrictMode>,

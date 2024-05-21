@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setuptools.setup(
     name="streamlit-ai-assist",
-    version="0.1.1",
+    version="0.0.1",
     author="Kaitlyn Hennacy",
     author_email="kaitlynhennacy@gmail.com",
     description="A built in data analyst for your Streamlit app",
@@ -30,7 +30,8 @@ setuptools.setup(
         "snowflake-sqlalchemy>=1.5.1",
         "sqlalchemy>=1.4",
         "transformers>=4.41.0",
-        "streamlit-mic-recorder"
+        "streamlit-mic-recorder",
+        "python-dateutil<=2.9.0"
     ],
     extras_require={
         "devel": [

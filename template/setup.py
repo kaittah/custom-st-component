@@ -30,6 +30,7 @@ setuptools.setup(
         "snowflake-sqlalchemy>=1.5.1",
         "sqlalchemy>=1.4",
         "transformers>=4.41.0",
+        "streamlit-mic-recorder"
     ],
     extras_require={
         "devel": [

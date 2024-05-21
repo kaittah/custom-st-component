@@ -73,8 +73,8 @@ def streamlit_ai_assist(
         graphing_import_path:str,
         database_name:str,
         general_description:str,
-        enable_speech_to_text:bool=True,
-        key: str=None):
+        mode:str="chat",
+        key:str=None):
     """Create a new instance of "streamlit_ai_assist".
 
     Parameters
@@ -97,8 +97,11 @@ def streamlit_ai_assist(
     general_description: str
         A general description of the use case for the dashboard. This is used to instruct the Assistant to not
         go off topic.
-    enable_speech_to_text: bool
-        Whether to allow using speech to text as input.
+    mode: str
+        One of the following options:
+            chat: For chatting with the data analyst assistant
+            search: For pulling up relevant graphs
+            dual: chat stacked on top of search
     key: str
         An optional key that uniquely identifies this component. If this is
         None, and the component's arguments are changed, the component will
@@ -109,6 +112,8 @@ def streamlit_ai_assist(
     None
 
     """
+
+
     da = DataAnalystChat(
         graphing_file_path=graphing_file_path,
         graphing_import_path=graphing_import_path,
@@ -125,19 +130,18 @@ def streamlit_ai_assist(
     if "speech_text" not in st.session_state:
         st.session_state.speech_text = ""
 
-    if enable_speech_to_text:
-        with col1:
-            speech_text = speech_to_text(
-                language='en',
-                start_prompt="🎙️",
-                stop_prompt="⏹️",
-                just_once=True,
-                use_container_width=False,
-                callback=None,
-                args=(),
-                kwargs={},
-                key=None
-            )
+    with col1:
+        speech_text = speech_to_text(
+            language='en',
+            start_prompt="🎙️",
+            stop_prompt="⏹️",
+            just_once=True,
+            use_container_width=False,
+            callback=None,
+            args=(),
+            kwargs={},
+            key=None
+        )
         st.session_state.speech_text = speech_text
 
 
@@ -150,67 +154,69 @@ def streamlit_ai_assist(
     else:
         input_prompt = st.session_state.input_prompt
 
-    renderables = []
-    
-    if input_prompt:
-        renderables = da.run(prompt=input_prompt)
-        _component_func(
-            key=key,
-            renderables=[r.to_dict() for r in renderables],
-            prompt=input_prompt
-        )
-    new_graphs = [r for r in renderables if r.type.value == "NEW_GRAPH"]
-    repo_name = os.environ.get('REPO_NAME')
-    repo_owner = os.environ.get('REPO_OWNER')
-    github_token = os.environ.get('GITHUB_PERSONAL_ACCESS_TOKEN')
+    if mode in ["chat", "dual"]:
+        renderables = []
+        
+        if input_prompt:
+            renderables = da.run(prompt=input_prompt)
+            _component_func(
+                key=key,
+                renderables=[r.to_dict() for r in renderables],
+                prompt=input_prompt
+            )
+        new_graphs = [r for r in renderables if r.type.value == "NEW_GRAPH"]
+        repo_name = os.environ.get('REPO_NAME')
+        repo_owner = os.environ.get('REPO_OWNER')
+        github_token = os.environ.get('GITHUB_PERSONAL_ACCESS_TOKEN')
 
-    if all([new_graphs, repo_name, repo_owner, github_token]):
+        if all([new_graphs, repo_name, repo_owner, github_token]):
 
-        @st.experimental_dialog("New Graphs Created!")
-        def create_pr(code_block):
-            st.write(f"""Want to add this to the code base? Please create a title for this graph and hit submit to create a pull request:
-```{code_block}```""")
-            pr_title = st.text_input("Tile: ")
-            if st.button("Submit"):
-                if not pr_title:
-                    st.write("Please give the graph a title")
-                else:
-                    try:
-                        pr_url = repo_actions.create_new_graphing_pr(repo_name=repo_name,
-                                                            repo_owner=repo_owner,
-                                                            token=github_token,
-                                                            graphing_file_full_path=graphing_file_path,
-                                                            graph_title=pr_title,
-                                                            new_code=code_block)
-                        st.success(f'Success! See PR at [{pr_url}]({pr_url})')
-                    except Exception as e:
-                        st.error(f"There was an error creating this PR: {str(e)}")
-        st.write(":mailbox: You got new graphs!")
-        for index, record in enumerate(new_graphs):
-            if st.button(record.function_name):
-                create_pr(record.code)
+            @st.experimental_dialog("New Graphs Created!")
+            def create_pr(code_block):
+                st.write(f"""Want to add this to the code base? Please create a title for this graph and hit submit to create a pull request:
+    ```{code_block}```""")
+                pr_title = st.text_input("Tile: ")
+                if st.button("Submit"):
+                    if not pr_title:
+                        st.write("Please give the graph a title")
+                    else:
+                        try:
+                            pr_url = repo_actions.create_new_graphing_pr(repo_name=repo_name,
+                                                                repo_owner=repo_owner,
+                                                                token=github_token,
+                                                                graphing_file_full_path=graphing_file_path,
+                                                                graph_title=pr_title,
+                                                                new_code=code_block)
+                            st.success(f'Success! See PR at [{pr_url}]({pr_url})')
+                        except Exception as e:
+                            st.error(f"There was an error creating this PR: {str(e)}")
+            st.write(":mailbox: You got new graphs!")
+            for index, record in enumerate(new_graphs):
+                if st.button(record.function_name):
+                    create_pr(record.code)
 
     st.divider()
 
-    docs = documents.python_to_docs(graphing_file_path)
-    n_graphs_to_display = 6
-    if input_prompt:
-        top_k_docs = retrieve_top_k(query=input_prompt, docs=docs, k=n_graphs_to_display)
-    else:
-        top_k_docs = docs[:n_graphs_to_display]
-    if top_k_docs:
-        top_k_function_names = documents.extract_function_names(top_k_docs)
-        db = get_database(database_name)
-        conn = db.connect()
-        imported_graphing_library = importlib.import_module(graphing_import_path)
-        to_render = []
-        for func_name in top_k_function_names:
-            func = eval(f'imported_graphing_library.{func_name}')
-            fig = func(conn)
-            fig.update_layout(width=300, height=300)
-            to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig)))
-    _component_func(
-        key=None,
-        renderables=[r.to_dict() for r in to_render],
-        prompt=input_prompt
-    )
+    if mode in ["search", "dual"]:
+        docs = documents.python_to_docs(graphing_file_path)
+        n_graphs_to_display = 6
+        if input_prompt:
+            top_k_docs = retrieve_top_k(query=input_prompt, docs=docs, k=n_graphs_to_display)
+        else:
+            top_k_docs = docs[:n_graphs_to_display]
+        if top_k_docs:
+            top_k_function_names = documents.extract_function_names(top_k_docs)
+            db = get_database(database_name)
+            conn = db.connect()
+            imported_graphing_library = importlib.import_module(graphing_import_path)
+            to_render = []
+            for func_name in top_k_function_names:
+                func = eval(f'imported_graphing_library.{func_name}')
+                fig = func(conn)
+                fig.update_layout(width=300, height=300)
+                to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig)))
+        _component_func(
+            key=None,
+            renderables=[r.to_dict() for r in to_render],
+            prompt=input_prompt
+        )

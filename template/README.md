@@ -28,7 +28,7 @@ streamlit_ai_assist(
             graphing_import_path="graphing",
             database_name="snowflake",
             general_description="This is a database for a company that does X",
-            enable_speech_to_text=True,
+            mode="chat",
             key="foo1"
 )
 

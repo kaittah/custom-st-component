@@ -21,4 +21,7 @@ class FunctionRewriteAgent(BaseModel):
 
     def clean_function(self, code_str: str):
         code_str = re.sub(r'^```(?:python\s*)?|```$', '', code_str)
-        return code_str + '\n    return fig'
+        if code_str[-25:] == "return fig":
+            return code_str
+        else:
+            return code_str + '\n    return fig'

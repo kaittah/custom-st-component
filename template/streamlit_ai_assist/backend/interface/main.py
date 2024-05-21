@@ -96,7 +96,7 @@ class DataAnalystChat:
                 conn = db.connect()
                 exec(row["exec"])
                 fig = eval(row["eval"])
-                to_render.append(Renderable(type=RenderType.GRAPH, content=pio.to_json(fig),
+                to_render.append(Renderable(type=RenderType.NEW_GRAPH, content=pio.to_json(fig),
                                             code=row["exec"], function_name=row["eval"]))
 
             elif row["print"]:

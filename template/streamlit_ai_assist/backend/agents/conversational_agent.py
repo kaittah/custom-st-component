@@ -52,23 +52,22 @@ class ConversationalAgent(BaseModel):
 
     def _parse(self, generated: str) -> Tuple[str, str]:
         if FINAL_ANSWER_TOKEN in generated:
-            print("End reached")
             return "Final Answer", generated.split(FINAL_ANSWER_TOKEN)[-1].strip()
         regex = r"Action: [\[]?(.*?)[\]]?[\n]*Action Input:[\s]*(.*)"
         match = re.search(regex, generated, re.DOTALL)
         if not match:
-            return None, None
+            return "respond to user", generated
         tool = match.group(1).strip()
         tool_input = match.group(2)
         return tool, tool_input.strip(" ").strip('"')
 
     def decide_next_action(self, prompt: str) -> str:
-        print(prompt)
         generated = self.llm.generate(prompt, r"{prompt}", stop=self.stop_pattern)
-        print(generated)
         tool, tool_input = self._parse(generated)
         tool = tool.lower().strip()
         if "final answer" in tool:
+            return generated, None, tool_input
+        elif "respond to user" in tool:
             return generated, None, tool_input
         elif "ask for analysis" in tool:
             return generated, "ask for analysis", tool_input
